@@ -1,12 +1,11 @@
 # BlockRide
 
-BlockRide uses blockchain tech to cuts extra layers and enables riders and drivers to co-determine riding price through bidding and direct communication. The platform incorporates blockchain to increase security and accuracy. Instead of subjective and non-comparable star ratings, users will either input brief descriptions or choose appropriate phrases to review the experience with counterparties; the reviews will then turned into objective ratings through sentiment analysis.  The map... (how ensures the timeliness pickup of requests)
+BlockRide uses blockchain tech to cuts extra layers and enables riders and drivers to co-determine riding price through bidding and direct communication. 
 
 ## Features
 
-* (cuts extra layers and) enables rider and user to co-determine riding price through bidding and direct communication.
-* incorporates block chain into the communication (and others?) process (to increase security and accuracy)
-* Instead of subjective and non-comparable star ratings, users will either input brief descriptions or choose appropriate phrases to review the experience with counterparties; the reviews will then be turned into objective ratings through sentiment analysis.  
+* open and transparent platform list riders and drivers information
+* cuts extra layers and enables rider and user to co-determine riding price through bidding and direct communication.
 
 ## Get Started
 
@@ -17,3 +16,7 @@ BlockRide uses blockchain tech to cuts extra layers and enables riders and drive
 1. Run `truffle compile` in the project directory
 1. `truffle migrate`
 1. `npm run start`
+
+## Note
+
+The project is created in hackathone event, so there are lots of code design and maintaince issue. Some functionality is not fully working.
