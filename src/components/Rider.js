@@ -2,8 +2,12 @@ import React, { Component } from 'react'
 import { Form, Input, Col, Row, Layout, Button, Spin, Modal } from 'antd';
 
 import Map from './Map';
+import Trip from './Trip';
+
+import { parseTrip } from '../utils/ride';
 
 const FormItem = Form.Item;
+const ButtonGroup = Button.Group;
 
 class Rider extends Component {
   constructor(props) {
@@ -18,14 +22,6 @@ class Rider extends Component {
     this.loadDrivers(0);
   }
 
-  loadLocation = () => {
-    navigator.geolocation.getCurrentPosition((position) => {
-      this.setState({
-        position: position.coords
-      })
-    })
-  }
-
   loadRider = () => {
     const { ride, account } = this.props;
     ride.riders.call(account, {
@@ -36,6 +32,43 @@ class Rider extends Component {
         name: result[1]
       });
       this.loadLocation();
+      this.loadTrip();
+    });
+  }
+
+  loadLocation = () => {
+    navigator.geolocation.getCurrentPosition(({ coords}) => {
+      const riders = [{
+        id: this.props.account,
+        name,
+        lat: coords.latitude,
+        lng: coords.longitude
+      }]
+      this.setState({
+        riders,
+        position: {
+          lat: coords.latitude,
+          lng: coords.longitude
+        }
+      })
+    })
+  }
+
+  loadTrip = () => {
+    const { ride, account } = this.props;
+
+    ride.trips.call(account, {
+      from: account,
+    }).then((result) => {
+      const trip = parseTrip(result);
+      if (!trip) {
+        return;
+      }
+
+      this.setState({
+        trip,
+        requestRide: false
+      });
     });
   }
 
@@ -80,6 +113,23 @@ class Rider extends Component {
     });
   }
 
+  cancelTrip = () => {
+    const { ride, account } = this.props;
+
+    ride.stopTrip({
+      from: account,
+      gas: 1000000
+    }).then((result) => {
+      this.setState({
+        trip: null
+      });
+    });
+  }
+
+  openTripModal = () => {
+    this.setState({ requestRide: true });
+  }
+
   renderRegister = () =>
     <Modal
       className="register-modal"
@@ -97,11 +147,23 @@ class Rider extends Component {
     </Modal>
 
   renderActions() {
+    const { trip } = this.state;
 
+    if (!trip) {
+      return (<Button type="primary" onClick={this.openTripModal}>Request a ride</Button>)
+    }
+
+    return (
+      <ButtonGroup>
+        <Button onClick={this.openTripModal}>Update the ride</Button>
+        <Button type="danger" onClick={this.cancelTrip}>Cancel the ride</Button>
+      </ButtonGroup>
+    )
   }
 
   renderContent() {
-    const { position, name, drivers } = this.state;
+    const { ride, account } = this.props;
+    const { position, name, drivers, riders, requestRide, trip } = this.state;
 
 
     if (!position) {
@@ -122,7 +184,23 @@ class Rider extends Component {
             {this.renderActions()}
           </Col>
         </Row>
-        <Map position={position} drivers={drivers}/>
+        {
+          requestRide &&
+          <Trip
+            ride={ride}
+            trip={trip}
+            account={account}
+            onClose={() => this.setState({requestRide: false})}
+            onSubmit={this.loadTrip}
+          />
+        }
+        <Map
+          position={position}
+          drivers={drivers}
+          riders={riders}
+          origin={trip && trip.origin.geo}
+          destination={trip && trip.destination.geo}
+        />
       </div>
     );
   }

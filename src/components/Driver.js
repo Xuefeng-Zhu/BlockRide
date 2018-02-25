@@ -8,9 +8,7 @@ const FormItem = Form.Item;
 class Driver extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      drivers: []
-    };
+    this.state = {};
   }
 
   componentDidMount() {
@@ -29,7 +27,10 @@ class Driver extends Component {
       }]
       this.setState({
         drivers,
-        position: coords
+        position: {
+          lat: coords.latitude,
+          lng: coords.longitude
+        }
       })
     })
   }

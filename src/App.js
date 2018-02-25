@@ -93,7 +93,7 @@ class App extends Component {
     return (
       <Layout>
         <Header className="header">
-          <div className="logo">Open Ride Sharing</div>
+          <div className="logo">BlockRide</div>
           <Menu
             theme="dark"
             mode="horizontal"
@@ -110,7 +110,7 @@ class App extends Component {
           </Layout>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Open Ride Sharing
+          BlockRide @ Xuefeng Zhu
         </Footer>
       </Layout>
     );
