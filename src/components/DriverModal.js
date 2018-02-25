@@ -1,94 +1,144 @@
 import React, { Component } from 'react'
-import { Modal, Card } from 'antd';
+import { Modal, Card, Input, Tabs, Rate } from 'antd';
+import { ChatFeed } from 'react-chat-ui'
+import _ from 'underscore';
 
+import { database } from '../utils/firebase';
 import Map from './Map';
-import { parseTrip } from '../utils/ride';
 
-class RiderModal extends Component {
+const TabPane = Tabs.TabPane;
+
+class DriverModal extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      messages: []
+    };
   }
 
   componentDidMount() {
-    this.loadRider();
+    this.loadDriver();
   }
 
-  loadRider = () => {
-    const { ride, account, rider } = this.props;
-    ride.riders.call(rider, {
+  loadDriver = () => {
+    const { ride, account, driver } = this.props;
+    ride.drivers.call(driver, {
       from: account,
     }).then((result) => {
+      const [id, name, car, lat, lng] = result;
       this.setState({
-        rider: {
-          name: result[1]
+        driver: {
+          id,
+          name,
+          car,
+          lat: lat.toNumber() / 100000,
+          lng: lng.toNumber() / 100000,
         }
       });
-      this.loadTrip();
+      this.listenMessage();
     });
   }
 
-  loadTrip = () => {
-    const { ride, account, rider } = this.props;
-
-    ride.trips.call(rider, {
-      from: account,
-    }).then((result) => {
-      const trip = parseTrip(result);
-
-      this.setState({
-        trip
+  listenMessage = () => {
+    const { driver, account } = this.props;
+    this.messagesRef = database.ref(`messages/${account}/${driver}`);
+    this.messagesRef.on('child_added', (data) => {
+      const messages = this.state.messages.slice();
+      const { message, sender } = data.val();
+      messages.push({
+        message,
+        id: sender === account ? 0 : 1,
+        senderName: sender === account ? 'You' : this.state.driver.name
       });
+      this.setState({
+        messages
+      })
     });
   }
 
-  renderRiderInfo() {
-    const { rider } = this.state;
+  sendMessage = (e) => {
+    this.messagesRef.push({
+      message: e.target.value,
+      sender: this.props.account
+    });
 
-    if (!rider) {
+    e.target.value = '';
+  }
+
+
+  confirmTrip = () => {
+    const { ride, account, driver, onClose } = this.props;
+    ride.confirmTrip(driver, {
+      from: account,
+      gas: 1000000000000
+    }).then(() => {
+      database.ref(`confirm/${driver}`).set(account);
+      onClose();
+    });
+  }
+
+  denyTrip = () => {
+    const { ride, account, driver, onClose } = this.props;
+    ride.denyTrip(driver, {
+      from: account,
+      gas: 10000000
+    }).then(() => {
+      onClose();
+    });
+  }
+
+  renderDriverInfo() {
+    const { driver } = this.state;
+
+    if (!driver) {
       return
     }
 
     return (
-      <Card title="Rider Info" style={{ width: '100%' }}>
-        <div><b>Name:</b> {rider.name}</div>
+      <Card title="Driver Info" style={{ width: '100%' }}>
+        <div><b>Name:</b> {driver.name}</div>
+        <div><b>Car:</b> {driver.car}</div>
+        <div><b>Rating:</b> <Rate value={4.5} /></div>
+        <Map position={driver} drivers={[driver]}/>
       </Card>
     )
   }
 
-  renderRiderTrip() {
-    const { trip } = this.state;
-
-    if (!trip) {
-      return
-    }
+  renderChat = () => {
+    const { messages } = this.state;
 
     return (
-      <Card title="Trip Info" style={{ width: '100%' }}>
-        <div><b>Origin:</b> {trip.origin.address}</div>
-        <div><b>Destination:</b> {trip.destination.address}</div>
-        <div><b>Price:</b> {trip.price}</div>
-        <Map origin={trip.origin.geo} destination={trip.destination.geo} />
-      </Card>
+      <div>
+        <ChatFeed
+          messages={messages}
+          hasInputField={false}
+          showSenderName
+        />
+        <Input placeholder="Type message" onPressEnter={this.sendMessage} />
+      </div>
     )
   }
-
 
   render() {
     return (
       <Modal
         visible
         title="Rider trip"
-        okText="Accept"
-        cancelText="Cancel"
-        onOk={this.shareTrip}
-        onCancel={this.props.onClose}
+        okText="Confirm"
+        cancelText="Deny"
+        onOk={this.confirmTrip}
+        onCancel={this.denyTrip}
       >
-        {this.renderRiderInfo()}
-        {this.renderRiderTrip()}
+        <Tabs>
+          <TabPane tab="Info" key="info">
+            {this.renderDriverInfo()}
+          </TabPane>
+          <TabPane tab="Chat" key="chat">{this.renderChat()}</TabPane>
+        </Tabs>
+
       </Modal>
     );
   }
 }
 
-export default RiderModal;
+export default DriverModal;

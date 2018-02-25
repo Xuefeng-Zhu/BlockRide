@@ -1,13 +1,19 @@
 import React, { Component } from 'react'
-import { Modal, Card } from 'antd';
+import { Modal, Card, Input, Tabs, message, Rate } from 'antd';
+import { ChatFeed } from 'react-chat-ui'
 
 import Map from './Map';
 import { parseTrip } from '../utils/ride';
+import { database } from '../utils/firebase';
+
+const TabPane = Tabs.TabPane;
 
 class RiderModal extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      messages: []
+    };
   }
 
   componentDidMount() {
@@ -25,6 +31,7 @@ class RiderModal extends Component {
         }
       });
       this.loadTrip();
+      this.listenMessage();
     });
   }
 
@@ -42,6 +49,42 @@ class RiderModal extends Component {
     });
   }
 
+  listenMessage = () => {
+    const { account, rider } = this.props;
+    this.messagesRef = database.ref(`messages/${rider}/${account}`);
+    this.messagesRef.on('child_added', (data) => {
+      const messages = this.state.messages.slice();
+      const { message, sender } = data.val();
+      messages.push({
+        message,
+        id: sender === account ? 0 : 1,
+        senderName: sender === account ? 'You' : this.state.rider.name
+      });
+      this.setState({
+        messages
+      })
+    });
+  }
+
+  sendMessage = (e) => {
+    this.messagesRef.push({
+      message: e.target.value,
+      sender: this.props.driver
+    });
+
+    e.target.value = '';
+  }
+
+  acceptTrip = () => {
+    const { ride, account, rider } = this.props;
+    ride.acceptTrip(rider, {
+      from: account,
+    }).then(() => {
+      message.success('Wait for the rider to confirm');
+      database.ref(`trip/${rider}`).set(account);
+    });
+  }
+
   renderRiderInfo() {
     const { rider } = this.state;
 
@@ -52,6 +95,7 @@ class RiderModal extends Component {
     return (
       <Card title="Rider Info" style={{ width: '100%' }}>
         <div><b>Name:</b> {rider.name}</div>
+        <div><b>Rating:</b> <Rate value={5} /></div>
       </Card>
     )
   }
@@ -73,6 +117,20 @@ class RiderModal extends Component {
     )
   }
 
+  renderChat = () => {
+    const { messages } = this.state;
+
+    return (
+      <div>
+        <ChatFeed
+          messages={messages}
+          hasInputField={false}
+          showSenderName
+        />
+        <Input placeholder="Type message"  onPressEnter={this.sendMessage}/>
+      </div>
+    )
+  }
 
   render() {
     return (
@@ -81,11 +139,17 @@ class RiderModal extends Component {
         title="Rider trip"
         okText="Accept"
         cancelText="Cancel"
-        onOk={this.shareTrip}
+        onOk={this.acceptTrip}
         onCancel={this.props.onClose}
       >
-        {this.renderRiderInfo()}
-        {this.renderRiderTrip()}
+        <Tabs>
+          <TabPane tab="Info" key="info">
+            {this.renderRiderInfo()}
+            {this.renderRiderTrip()}
+          </TabPane>
+          <TabPane tab="Chat" key="chat">{this.renderChat()}</TabPane>
+        </Tabs>
+
       </Modal>
     );
   }

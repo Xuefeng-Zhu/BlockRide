@@ -1,9 +1,11 @@
 import React, { Component } from 'react'
 import { Form, Input, Col, Row, Layout, Button, Spin, Modal } from 'antd';
+import _ from 'underscore';
 
 import Map from './Map';
 import RiderModal from './RiderModal';
 import { parseTrip } from '../utils/ride';
+import { database } from '../utils/firebase';
 
 const FormItem = Form.Item;
 
@@ -11,31 +13,52 @@ class Driver extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      riders: []
+      riders: {}
     };
   }
 
   componentDidMount() {
     this.loadDriver();
+    this.subFirebase();
+  }
+
+  subFirebase = () => {
+    const { account } = this.props
+    database.ref(`confirm/${account}`).on('value', (snapshot) => {
+      const riderId = snapshot.val();
+
+      if (riderId) {
+        database.ref(`confirm/${account}`).set(null);
+        this.setState({
+          trip: riderId
+        })
+        this.loadRider(riderId);
+      }
+    })
   }
 
   loadLocation = () => {
     const { name, car } = this.state;
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
-      const drivers = [{
-        name,
-        car,
-        id: this.props.account,
+    const coords = {
+      latitude: 40.11354,
+      longitude: -88.22156
+    }
+    const drivers = [{
+      name,
+      car,
+      id: this.props.account,
+      lat: coords.latitude,
+      lng: coords.longitude
+    }]
+    this.setState({
+      drivers,
+      position: {
         lat: coords.latitude,
         lng: coords.longitude
-      }]
-      this.setState({
-        drivers,
-        position: {
-          lat: coords.latitude,
-          lng: coords.longitude
-        }
-      })
+      }
+    })
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      console.log(coords)
     })
   }
 
@@ -54,8 +77,10 @@ class Driver extends Component {
       });
       this.loadLocation();
 
-      if (!trip) {
+      if (trip === '0x0000000000000000000000000000000000000000') {
         this.loadRiders(0);
+      } else {
+        this.loadRider(trip);
       }
     });
   }
@@ -81,12 +106,12 @@ class Driver extends Component {
         return;
       }
 
-      const riders = this.state.riders.slice();
-      riders.push({
+      const riders = Object.assign({}, this.state.riders);
+      riders[rider] = {
         id: trip.rider,
         lat: trip.origin.geo[0],
         lng: trip.origin.geo[1],
-      })
+      }
       this.setState({ riders });
     });
   }
@@ -109,15 +134,17 @@ class Driver extends Component {
   startDriving = () => {
     const { ride, account } = this.props;
     const { position } = this.state;
-    const { latitude, longitude } = position
+    const { lat, lng} = position
 
-    ride.shareLoc(latitude * 100000, longitude * 100000, {
+    ride.shareLoc(lat * 100000, lng * 100000, {
       from: account,
       gas: 1000000
     }).then((result) => {
       this.setState({
         driving: true
       });
+
+      database.ref('driving/new').set(account);
     });
   }
 
@@ -134,7 +161,7 @@ class Driver extends Component {
     });
   }
 
-  onClickRider = (rider) => {
+  onRiderModal = (rider) => {
     this.setState({
       selectedRider: rider
     })
@@ -161,7 +188,12 @@ class Driver extends Component {
     </Modal>
 
   renderActions() {
-    const { driving } = this.state;
+    const { driving, riders, trip } = this.state;
+    const { account } = this.props;
+
+    if (_(riders[trip], 'trip.driver') === account) {
+      return (<Button>On a trip</Button>)
+    }
 
     if (!driving) {
       return (<Button type="primary" onClick={this.startDriving}>Prove of Drive!</Button>)
@@ -172,7 +204,7 @@ class Driver extends Component {
 
   renderContent() {
     const { position, name, drivers, riders, selectedRider, driver } = this.state;
-    const { ride, account } = this.props;
+    const { ride } = this.props;
 
     if (!position) {
       return <Spin tip="Loading Location..." />;
@@ -192,13 +224,17 @@ class Driver extends Component {
             {this.renderActions()}
           </Col>
         </Row>
-        <Map position={position} drivers={drivers} riders={riders} onClickRider={this.onClickRider}/>
+        <Map
+          position={position}
+          drivers={drivers}
+          riders={Object.values(riders)}
+          onClickRider={this.onRiderModal}
+        />
         {selectedRider &&
           <RiderModal
             ride={ride}
-            account={account}
             rider={selectedRider}
-            driver={driver}
+            account={driver}
             onClose={() => this.setState({ selectedRider: null })}
           />}
       </div>
