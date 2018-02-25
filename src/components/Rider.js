@@ -80,24 +80,20 @@ class Rider extends Component {
   }
 
   loadLocation = () => {
-    const coords = {
-      latitude: 40.1135478,
-      longitude: -88.2215607
-    }
-    const riders = [{
-      id: this.props.account,
-      name,
-      lat: coords.latitude,
-      lng: coords.longitude
-    }]
-    this.setState({
-      riders,
-      position: {
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      const riders = [{
+        id: this.props.account,
+        name,
         lat: coords.latitude,
         lng: coords.longitude
-      }
-    })
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      }]
+      this.setState({
+        riders,
+        position: {
+          lat: coords.latitude,
+          lng: coords.longitude
+        }
+      })
     })
   }
 

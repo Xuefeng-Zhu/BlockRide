@@ -39,25 +39,22 @@ class Driver extends Component {
 
   loadLocation = () => {
     const { name, car } = this.state;
-    const coords = {
-      latitude: 40.11354,
-      longitude: -88.22156
-    }
-    const drivers = [{
-      name,
-      car,
-      id: this.props.account,
-      lat: coords.latitude,
-      lng: coords.longitude
-    }]
-    this.setState({
-      drivers,
-      position: {
+
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      const drivers = [{
+        name,
+        car,
+        id: this.props.account,
         lat: coords.latitude,
         lng: coords.longitude
-      }
-    })
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      }]
+      this.setState({
+        drivers,
+        position: {
+          lat: coords.latitude,
+          lng: coords.longitude
+        }
+      })
       console.log(coords)
     })
   }
