@@ -4,6 +4,9 @@ import getWeb3 from './utils/getWeb3'
 
 import { Layout, Menu, Spin, Alert } from 'antd';
 
+import Rider from './components/Rider';
+import Driver from './components/Driver';
+
 import 'antd/dist/antd.css';
 import './App.css';
 
@@ -15,7 +18,7 @@ class App extends Component {
 
     this.state = {
       storageValue: 0,
-      web3: null,
+      web3: null
     }
   }
 
@@ -49,18 +52,15 @@ class App extends Component {
     const Ride = contract(RideContract)
     Ride.setProvider(this.state.web3.currentProvider)
 
-    // Declaring this for later so we can chain functions on Ride.
-    var RideInstance
-
     // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.setState({
         account: accounts[0],
       });
+
       Ride.deployed().then((instance) => {
-        RideInstance = instance
         this.setState({
-          Ride: instance
+          ride: instance
         });
       })
     })
@@ -73,28 +73,35 @@ class App extends Component {
   }
 
   renderContent = () => {
-    const { account, Ride, web3, mode } = this.state;
+    const { account, ride, web3, mode } = this.state;
 
-    if (!Ride) {
+    if (!ride) {
       return <Spin tip="Loading..." />;
     }
 
+    switch (mode) {
+      case 'rider':
+        return <Rider account={account} ride={ride} web3={web3} />
+      case 'driver':
+        return <Driver account={account} ride={ride} web3={web3} />
+      default:
+        return <Alert message="Please choose a role" type="info" showIcon />
+    }
   }
 
   render() {
     return (
       <Layout>
         <Header className="header">
-          <div className="logo">Open Ride</div>
+          <div className="logo">Open Ride Sharing</div>
           <Menu
             theme="dark"
             mode="horizontal"
-            defaultSelectedKeys={['employer']}
             style={{ lineHeight: '64px' }}
             onSelect={this.onSelectTab}
           >
-            <Menu.Item key="employer">Rider</Menu.Item>
-            <Menu.Item key="employee">Driver</Menu.Item>
+            <Menu.Item key="rider">Rider</Menu.Item>
+            <Menu.Item key="driver">Driver</Menu.Item>
           </Menu>
         </Header>
         <Content style={{ padding: '0 50px' }}>
@@ -103,7 +110,7 @@ class App extends Component {
           </Layout>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Open Ride
+          Open Ride Sharing
         </Footer>
       </Layout>
     );

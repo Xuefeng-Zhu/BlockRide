@@ -10,3 +10,11 @@
   margin-bottom: 10px;
   margin-top: 10px;
 }
+
+.register-modal .ant-btn-lg:first-of-type {
+  display: none;
+}
+
+.header-row {
+  margin-bottom: 10px;
+}

@@ -1,19 +1,19 @@
-pragma solidity ^0.4.14;
+pragma solidity ^0.4.13;
 
 contract Ride {
     struct Trip {
+        bool active;
+        address rider;
+        address driver;
         string origin;
         string destination;
         uint price;
-        bool active;
     }
 
     struct Driver {
         address id;
         string name;
         string car;
-        string[] reviews;
-        uint[] scores;
         int lat;
         int lng;
     }
@@ -21,15 +21,14 @@ contract Ride {
     struct Rider {
         address id;
         string name;
-        string[] reviews;
-        uint[] scores;
+        address trip;
     }
 
     mapping(address => Driver) public drivers;
     mapping(address => Rider) public riders;
     mapping(address => Trip) public trips;
-    address[] driverList;
-    address[] riderList;
+    address[] public driverList;
+    address[] public riderList;
 
     function becomeDriver(string name, string car) public {
         Driver storage driver = drivers[msg.sender];
@@ -72,9 +71,17 @@ contract Ride {
 
     function shareTrip(string origin, string destination, uint price) public {
         Trip storage trip = trips[msg.sender];
+        trip.rider = msg.sender;
         trip.origin = origin;
         trip.destination = destination;
         trip.price = price;
         trip.active = true;
+    }
+
+    function stopTrip() public {
+        Trip storage trip = trips[msg.sender];
+
+        assert(trip.rider != 0x0);
+        trip.active = false;
     }
 }
