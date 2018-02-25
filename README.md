@@ -1,12 +1,12 @@
-# payroll
+# BlockRide
 
-It is common for the payment to be overdue or missed when working for small business and contract employment. A payroll system based on Ethereum can be a solution resolving this issue.
+BlockRide uses blockchain tech to cuts extra layers and enables riders and drivers to co-determine riding price through bidding and direct communication. The platform incorporates blockchain to increase security and accuracy. Instead of subjective and non-comparable star ratings, users will either input brief descriptions or choose appropriate phrases to review the experience with counterparties; the reviews will then turned into objective ratings through sentiment analysis.  The map... (how ensures the timeliness pickup of requests)
 
 ## Features
 
-* Add/Update/Delete employees
-* Add fund to the contract
-* Ensure employees get paid on time
+* (cuts extra layers and) enables rider and user to co-determine riding price through bidding and direct communication.
+* incorporates block chain into the communication (and others?) process (to increase security and accuracy)
+* Instead of subjective and non-comparable star ratings, users will either input brief descriptions or choose appropriate phrases to review the experience with counterparties; the reviews will then be turned into objective ratings through sentiment analysis.  
 
 ## Get Started
 
@@ -17,8 +17,3 @@ It is common for the payment to be overdue or missed when working for small busi
 1. Run `truffle compile` in the project directory
 1. `truffle migrate`
 1. `npm run start`
-
-## Why this is better than traditional system
-
-* Get rid of costly third party HR management
-* Make employees be able to get payment ontime
