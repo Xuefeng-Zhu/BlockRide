@@ -69,7 +69,7 @@ class RiderModal extends Component {
   sendMessage = (e) => {
     this.messagesRef.push({
       message: e.target.value,
-      sender: this.props.driver
+      sender: this.props.account
     });
 
     e.target.value = '';

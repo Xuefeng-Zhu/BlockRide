@@ -69,8 +69,7 @@ class DriverModal extends Component {
   confirmTrip = () => {
     const { ride, account, driver, onClose } = this.props;
     ride.confirmTrip(driver, {
-      from: account,
-      gas: 1000000000000
+      from: account
     }).then(() => {
       database.ref(`confirm/${driver}`).set(account);
       onClose();
@@ -79,12 +78,12 @@ class DriverModal extends Component {
 
   denyTrip = () => {
     const { ride, account, driver, onClose } = this.props;
-    ride.denyTrip(driver, {
-      from: account,
-      gas: 10000000
-    }).then(() => {
-      onClose();
-    });
+    onClose();
+    // ride.denyTrip(driver, {
+    //   from: account,
+    //   gas: 10000000
+    // }).then(() => {
+    // });
   }
 
   renderDriverInfo() {

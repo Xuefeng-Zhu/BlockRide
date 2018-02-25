@@ -200,8 +200,8 @@ class Driver extends Component {
   }
 
   renderContent() {
-    const { position, name, drivers, riders, selectedRider, driver } = this.state;
-    const { ride } = this.props;
+    const { position, name, drivers, riders, selectedRider } = this.state;
+    const { ride, account } = this.props;
 
     if (!position) {
       return <Spin tip="Loading Location..." />;
@@ -231,7 +231,7 @@ class Driver extends Component {
           <RiderModal
             ride={ride}
             rider={selectedRider}
-            account={driver}
+            account={account}
             onClose={() => this.setState({ selectedRider: null })}
           />}
       </div>
