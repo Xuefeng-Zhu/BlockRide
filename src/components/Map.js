@@ -19,9 +19,14 @@ const renderDriverMarker = (drivers) =>
   ))
 
 
-const renderRiderMarker = (riders) =>
+const renderRiderMarker = (riders, onClickRider) =>
   riders.map(rider => (
-    <Marker key={rider.id} position={{ lat: rider.lat, lng: rider.lng }} icon={icons.rider} />
+    <Marker
+      key={rider.id}
+      position={{ lat: rider.lat, lng: rider.lng }}
+      icon={icons.rider}
+      onClick={() => onClickRider(rider.id)}
+    />
   ))
 
 export default compose(
@@ -66,13 +71,13 @@ export default compose(
       this.getDirection(nextProps);
     }
   })
-)(({ position, drivers = [], riders = [], directions}) =>
+)(({ position, drivers = [], riders = [], directions, onClickRider}) =>
   <GoogleMap
     defaultZoom={20}
     defaultCenter={position}
   >
     {renderDriverMarker(drivers)}
-    {renderRiderMarker(riders)}
+    {renderRiderMarker(riders, onClickRider)}
     {directions && <DirectionsRenderer directions={directions} />}
   </GoogleMap>
 )

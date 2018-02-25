@@ -19,7 +19,6 @@ class Rider extends Component {
 
   componentDidMount() {
     this.loadRider();
-    this.loadDrivers(0);
   }
 
   loadRider = () => {
@@ -31,6 +30,7 @@ class Rider extends Component {
         loaded: true,
         name: result[1]
       });
+      this.loadDrivers(0);
       this.loadLocation();
       this.loadTrip();
     });
@@ -74,7 +74,7 @@ class Rider extends Component {
 
   loadDrivers = (index) => {
     const { ride, account } = this.props;
-    ride.riderList.call(index, {
+    ride.driverList.call(index, {
       from: account,
     }).then((result) => {
       this.loadDriver(result);
@@ -188,8 +188,8 @@ class Rider extends Component {
           requestRide &&
           <Trip
             ride={ride}
-            trip={trip}
             account={account}
+            trip={trip}
             onClose={() => this.setState({requestRide: false})}
             onSubmit={this.loadTrip}
           />

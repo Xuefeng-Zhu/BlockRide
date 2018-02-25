@@ -16,6 +16,7 @@ contract Ride {
         string car;
         int lat;
         int lng;
+        address trip;
     }
 
     struct Rider {

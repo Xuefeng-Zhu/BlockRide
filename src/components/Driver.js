@@ -2,13 +2,17 @@ import React, { Component } from 'react'
 import { Form, Input, Col, Row, Layout, Button, Spin, Modal } from 'antd';
 
 import Map from './Map';
+import RiderModal from './RiderModal';
+import { parseTrip } from '../utils/ride';
 
 const FormItem = Form.Item;
 
 class Driver extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      riders: []
+    };
   }
 
   componentDidMount() {
@@ -40,13 +44,50 @@ class Driver extends Component {
     ride.drivers.call(account, {
       from: account,
     }).then((result) => {
+      const [id, name, car, lat, lng, trip] = result;
       this.setState({
-        loaded: true,
-        name: result[1],
-        car: result[2],
-        driving: !!result[3].toNumber()
+        name,
+        car,
+        driver: id,
+        driving: !!lat.toNumber(),
+        loaded: true
       });
       this.loadLocation();
+
+      if (!trip) {
+        this.loadRiders(0);
+      }
+    });
+  }
+
+  loadRiders = (index) => {
+    const { ride, account } = this.props;
+    ride.riderList.call(index, {
+      from: account,
+    }).then((result) => {
+      this.loadRider(result);
+      this.loadRiders(index + 1);
+    });
+  }
+
+  loadRider = (rider) => {
+    const { ride, account } = this.props;
+    ride.trips.call(rider, {
+      from: account,
+    }).then((result) => {
+      const trip = parseTrip(result);
+
+      if (!trip) {
+        return;
+      }
+
+      const riders = this.state.riders.slice();
+      riders.push({
+        id: trip.rider,
+        lat: trip.origin.geo[0],
+        lng: trip.origin.geo[1],
+      })
+      this.setState({ riders });
     });
   }
 
@@ -93,6 +134,12 @@ class Driver extends Component {
     });
   }
 
+  onClickRider = (rider) => {
+    this.setState({
+      selectedRider: rider
+    })
+  }
+
   renderRegister = () =>
     <Modal
       className="register-modal"
@@ -124,7 +171,8 @@ class Driver extends Component {
   }
 
   renderContent() {
-    const { position, name, drivers } = this.state;
+    const { position, name, drivers, riders, selectedRider, driver } = this.state;
+    const { ride, account } = this.props;
 
     if (!position) {
       return <Spin tip="Loading Location..." />;
@@ -144,7 +192,15 @@ class Driver extends Component {
             {this.renderActions()}
           </Col>
         </Row>
-        <Map position={position} drivers={drivers}/>
+        <Map position={position} drivers={drivers} riders={riders} onClickRider={this.onClickRider}/>
+        {selectedRider &&
+          <RiderModal
+            ride={ride}
+            account={account}
+            rider={selectedRider}
+            driver={driver}
+            onClose={() => this.setState({ selectedRider: null })}
+          />}
       </div>
     );
   }

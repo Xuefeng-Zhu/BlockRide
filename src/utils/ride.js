@@ -3,7 +3,7 @@ const parseAddress = (rawAddress) => {
 
   return {
     address,
-    geo: geo.split(','),
+    geo: geo.split(',').map(parseFloat),
     raw: rawAddress
   };
 };
@@ -18,7 +18,7 @@ export const parseTrip = (trip) => {
   return {
     rider,
     driver,
-    price,
+    price: price.toNumber(),
     origin: parseAddress(origin),
     destination: parseAddress(destination),
   }
